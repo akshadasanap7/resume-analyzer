@@ -1,177 +1,358 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI Resume Screening System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
-    header { background: #1a1a2e; color: white; padding: 18px 32px; font-size: 1.4rem; font-weight: 700; }
-    .container { max-width: 1100px; margin: 30px auto; padding: 0 16px; }
-    .card { background: white; border-radius: 10px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    h2 { font-size: 1.1rem; margin-bottom: 16px; color: #1a1a2e; }
-    textarea { width: 100%; height: 130px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; resize: vertical; }
-    input[type="file"] { margin-top: 8px; }
-    button { margin-top: 12px; padding: 10px 24px; background: #1a1a2e; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; }
-    button:hover { background: #16213e; }
-    .tag { display: inline-block; background: #e8f0fe; color: #1a73e8; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; margin: 3px; }
-    .tag.missing { background: #fce8e6; color: #d93025; }
-    .stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
-    .stat-box { flex: 1; min-width: 160px; background: white; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .stat-box .val { font-size: 2rem; font-weight: 700; color: #1a1a2e; }
-    .stat-box .lbl { font-size: 0.85rem; color: #666; margin-top: 4px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th { background: #1a1a2e; color: white; padding: 10px 12px; text-align: left; }
-    td { padding: 10px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
-    tr:hover td { background: #f9f9f9; }
-    .score-bar { height: 8px; background: #e0e0e0; border-radius: 4px; margin-top: 4px; }
-    .score-fill { height: 8px; border-radius: 4px; background: linear-gradient(90deg, #1a73e8, #34a853); }
-    .medal { font-size: 1.2rem; }
-    #charts { display: flex; gap: 16px; flex-wrap: wrap; }
-    #charts > div { flex: 1; min-width: 300px; }
-    .hidden { display: none; }
-    #status { color: #1a73e8; font-size: 0.9rem; margin-top: 8px; }
-  </style>
 </head>
 <body>
-<header>🤖 AI-Powered Resume Screening & Candidate Ranking System</header>
+
+<!-- Floating Particles -->
+<div class="particles" id="particles"></div>
+
+<!-- Header -->
+<header>
+  <div class="header-logo">
+    <div class="logo-icon">🤖</div>
+    AI Resume Screening & Ranking System
+  </div>
+  <div class="header-badge">DSML PROJECT</div>
+</header>
+
 <div class="container">
 
-  <!-- Step 1: Job Description -->
-  <div class="card">
-    <h2>Step 1 — Upload Job Description</h2>
-    <textarea id="jdText" placeholder="Paste the job description here..."></textarea>
-    <button onclick="uploadJD()">Analyze JD</button>
-    <div id="jdSkills" style="margin-top:12px;"></div>
+  <!-- Step Indicators -->
+  <div class="steps-row">
+    <div class="step-indicator active" id="step1">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-label">Job Description</div>
+      </div>
+    </div>
+    <div class="step-indicator" id="step2">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-label">Upload Resumes</div>
+      </div>
+    </div>
+    <div class="step-indicator" id="step3">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-label">View Results</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Step 2: Resumes -->
-  <div class="card">
-    <h2>Step 2 — Upload Resumes (PDF / DOCX)</h2>
-    <input type="file" id="resumeFiles" multiple accept=".pdf,.docx" />
-    <button onclick="uploadResumes()">Screen Resumes</button>
+  <!-- Card 1: Job Description -->
+  <div class="card" style="animation-delay:0.1s">
+    <div class="card-header">
+      <div class="card-icon purple">📋</div>
+      <div>
+        <div class="card-title">Step 1 — Job Description</div>
+        <div class="card-sub">Paste the JD to auto-detect required skills</div>
+      </div>
+    </div>
+    <textarea id="jdText" placeholder="e.g. We are looking for a Python developer with experience in Machine Learning, SQL, Docker and AWS..."></textarea>
+    <button class="btn btn-primary" id="btnJD" onclick="uploadJD()">
+      <span class="spinner"></span>
+      <span class="btn-label">🔍 Analyze Job Description</span>
+    </button>
+    <div id="jdSkills"></div>
+  </div>
+
+  <!-- Card 2: Upload Resumes -->
+  <div class="card" style="animation-delay:0.2s">
+    <div class="card-header">
+      <div class="card-icon cyan">📁</div>
+      <div>
+        <div class="card-title">Step 2 — Upload Resumes</div>
+        <div class="card-sub">PDF or DOCX — multiple files supported</div>
+      </div>
+    </div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="resumeFiles" multiple accept=".pdf,.docx" onchange="showFiles(this)"/>
+      <div class="drop-icon">📂</div>
+      <div class="drop-text">Drag & Drop resumes here</div>
+      <div class="drop-sub">or click to browse — PDF / DOCX</div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+    <button class="btn btn-secondary" id="btnScreen" onclick="uploadResumes()">
+      <span class="spinner"></span>
+      <span class="btn-label">⚡ Screen & Rank Candidates</span>
+    </button>
     <div id="status"></div>
   </div>
 
   <!-- Dashboard -->
   <div id="dashboard" class="hidden">
+
+    <!-- Stats -->
     <div class="stats" id="statsRow"></div>
 
-    <div class="card">
-      <h2>📊 Candidate Rankings</h2>
-      <table>
-        <thead>
-          <tr><th>#</th><th>Candidate</th><th>Email</th><th>Experience</th><th>Skills Matched</th><th>ATS Score</th><th>Missing Skills</th></tr>
-        </thead>
-        <tbody id="rankTable"></tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>📈 Analytics</h2>
-      <div id="charts">
-        <div id="chartScores"></div>
-        <div id="chartSkills"></div>
+    <!-- Rankings Table -->
+    <div class="card" style="animation-delay:0.1s">
+      <div class="card-header">
+        <div class="card-icon green">🏆</div>
+        <div>
+          <div class="card-title">Candidate Rankings</div>
+          <div class="card-sub">Sorted by ATS Score — highest to lowest</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Candidate</th>
+              <th>Contact</th>
+              <th>Experience</th>
+              <th>Matched Skills</th>
+              <th>ATS Score</th>
+              <th>Missing Skills</th>
+            </tr>
+          </thead>
+          <tbody id="rankTable"></tbody>
+        </table>
       </div>
     </div>
-  </div>
 
+    <!-- Charts -->
+    <div class="card" style="animation-delay:0.2s">
+      <div class="card-header">
+        <div class="card-icon pink">📊</div>
+        <div>
+          <div class="card-title">Analytics Dashboard</div>
+          <div class="card-sub">Visual breakdown of candidate performance</div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-box" id="chartScores"></div>
+        <div class="chart-box" id="chartSkills"></div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script>
-async function uploadJD() {
-  const jd = document.getElementById("jdText").value.trim();
-  if (!jd) return alert("Please enter a job description.");
-  const fd = new FormData();
-  fd.append("jd_text", jd);
-  const res = await fetch("/upload_jd", { method: "POST", body: fd });
-  const data = await res.json();
-  if (data.error) return alert(data.error);
-  const container = document.getElementById("jdSkills");
-  container.innerHTML = "<strong>Detected Required Skills:</strong><br>" +
-    data.skills.map(s => `<span class="tag">${s}</span>`).join("");
+/* ── Particles ── */
+(function() {
+  const container = document.getElementById('particles');
+  const colors = ['#6c63ff','#00d4ff','#ff6b9d','#00e676','#ffd740'];
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 6 + 2;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*15+8}s;
+      animation-delay:${Math.random()*10}s;
+    `;
+    container.appendChild(p);
+  }
+})();
+
+/* ── Drag & Drop ── */
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('dragover');
+  document.getElementById('resumeFiles').files = e.dataTransfer.files;
+  showFiles(document.getElementById('resumeFiles'));
+});
+
+function showFiles(input) {
+  const list = document.getElementById('fileList');
+  list.innerHTML = [...input.files].map(f =>
+    `<span class="file-chip">📄 ${f.name}</span>`
+  ).join('');
 }
 
-async function uploadResumes() {
-  const files = document.getElementById("resumeFiles").files;
-  if (!files.length) return alert("Please select resume files.");
+/* ── Step Helper ── */
+function setStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('step' + i);
+    el.classList.remove('active','done');
+    if (i < n)  el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  }
+}
+
+/* ── Upload JD ── */
+async function uploadJD() {
+  const jd = document.getElementById('jdText').value.trim();
+  if (!jd) return showStatus('Please enter a job description.', 'error');
+  const btn = document.getElementById('btnJD');
+  btn.classList.add('loading'); btn.disabled = true;
   const fd = new FormData();
-  for (const f of files) fd.append("resumes", f);
-  document.getElementById("status").textContent = "⏳ Processing resumes...";
-  const res = await fetch("/upload_resumes", { method: "POST", body: fd });
+  fd.append('jd_text', jd);
+  const res  = await fetch('/upload_jd', { method: 'POST', body: fd });
   const data = await res.json();
-  if (data.error) { document.getElementById("status").textContent = "❌ " + data.error; return; }
-  document.getElementById("status").textContent = `✅ ${data.length} resume(s) processed.`;
+  btn.classList.remove('loading'); btn.disabled = false;
+  if (data.error) return showStatus(data.error, 'error');
+  const box = document.getElementById('jdSkills');
+  box.innerHTML = `<div class="skills-label">✅ ${data.skills.length} Required Skills Detected</div>` +
+    data.skills.map((s,i) => `<span class="tag skill" style="animation-delay:${i*0.05}s">${s}</span>`).join('');
+  setStep(2);
+}
+
+/* ── Upload Resumes ── */
+async function uploadResumes() {
+  const files = document.getElementById('resumeFiles').files;
+  if (!files.length) return showStatus('Please select resume files.', 'error');
+  const btn = document.getElementById('btnScreen');
+  btn.classList.add('loading'); btn.disabled = true;
+  showStatus('⏳ Processing resumes...', 'loading');
+  const fd = new FormData();
+  for (const f of files) fd.append('resumes', f);
+  const res  = await fetch('/upload_resumes', { method: 'POST', body: fd });
+  const data = await res.json();
+  btn.classList.remove('loading'); btn.disabled = false;
+  if (data.error) return showStatus(data.error, 'error');
+  showStatus(`✅ ${data.length} resume(s) screened and ranked!`, 'success');
+  setStep(3);
   renderDashboard(data);
 }
 
-function medals(i) { return ["🥇","🥈","🥉"][i] || (i+1); }
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = type;
+}
 
+/* ── Rank Badge ── */
+function rankBadge(i) {
+  const classes = ['gold','silver','bronze'];
+  const labels  = ['1','2','3'];
+  const cls = classes[i] || 'normal';
+  const lbl = labels[i]  || (i+1);
+  return `<div class="rank-badge ${cls}">${lbl}</div>`;
+}
+
+/* ── Score Color ── */
+function scoreClass(s) { return s >= 75 ? 'high' : s >= 50 ? 'medium' : 'low'; }
+function scoreColor(s) { return s >= 75 ? '#00e676' : s >= 50 ? '#ffd740' : '#ff5252'; }
+
+/* ── Render Dashboard ── */
 function renderDashboard(candidates) {
-  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById('dashboard').classList.remove('hidden');
 
-  // Stats
+  /* Stats */
   const avg = Math.round(candidates.reduce((s,c) => s + c.ats.total, 0) / candidates.length);
   const top = candidates[0];
   const allSkills = candidates.flatMap(c => c.skills);
-  const skillFreq = {};
-  allSkills.forEach(s => skillFreq[s] = (skillFreq[s]||0)+1);
-  const topSkills = Object.entries(skillFreq).sort((a,b)=>b[1]-a[1]).slice(0,3).map(e=>e[0]);
+  const freq = {};
+  allSkills.forEach(s => freq[s] = (freq[s]||0)+1);
+  const topSkills = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,3).map(e=>e[0]);
 
-  document.getElementById("statsRow").innerHTML = `
-    <div class="stat-box"><div class="val">${candidates.length}</div><div class="lbl">Total Resumes</div></div>
-    <div class="stat-box"><div class="val">${avg}</div><div class="lbl">Avg ATS Score</div></div>
-    <div class="stat-box"><div class="val">${top.name}</div><div class="lbl">🏆 Top Candidate</div></div>
-    <div class="stat-box"><div class="val" style="font-size:1rem">${topSkills.join(", ")}</div><div class="lbl">Top Skills</div></div>
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-box" style="animation-delay:0.05s">
+      <div class="stat-icon">📄</div>
+      <div class="stat-val">${candidates.length}</div>
+      <div class="stat-lbl">Total Resumes</div>
+    </div>
+    <div class="stat-box" style="animation-delay:0.1s">
+      <div class="stat-icon">📈</div>
+      <div class="stat-val">${avg}<span style="font-size:1rem;font-weight:400">/100</span></div>
+      <div class="stat-lbl">Avg ATS Score</div>
+    </div>
+    <div class="stat-box" style="animation-delay:0.15s">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-val" style="font-size:1.1rem">${top.name}</div>
+      <div class="stat-lbl">Top Candidate</div>
+    </div>
+    <div class="stat-box" style="animation-delay:0.2s">
+      <div class="stat-icon">💡</div>
+      <div class="stat-val" style="font-size:0.95rem;line-height:1.4">${topSkills.join(', ')}</div>
+      <div class="stat-lbl">Top Skills</div>
+    </div>
   `;
 
-  // Table
-  const tbody = document.getElementById("rankTable");
-  tbody.innerHTML = candidates.map((c, i) => `
-    <tr>
-      <td><span class="medal">${medals(i)}</span></td>
-      <td><strong>${c.name}</strong><br><small>${c.filename}</small></td>
-      <td>${c.email || "—"}</td>
-      <td>${c.experience} yr${c.experience !== 1 ? "s" : ""}</td>
+  /* Table */
+  document.getElementById('rankTable').innerHTML = candidates.map((c, i) => `
+    <tr style="animation-delay:${i*0.07}s">
+      <td>${rankBadge(i)}</td>
       <td>
-        ${c.ats.matched_skills.map(s=>`<span class="tag">${s}</span>`).join("") || "—"}
-        <br><small>${c.ats.match_percent}% match</small>
+        <div class="candidate-name">${c.name}</div>
+        <div class="candidate-file">📄 ${c.filename}</div>
       </td>
       <td>
-        <strong>${c.ats.total}/100</strong>
-        <div class="score-bar"><div class="score-fill" style="width:${c.ats.total}%"></div></div>
+        <div class="candidate-email">${c.email || '—'}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">${c.phone || ''}</div>
       </td>
-      <td>${c.ats.missing_skills.map(s=>`<span class="tag missing">${s}</span>`).join("") || "✅ None"}</td>
+      <td><span class="exp-badge">⏱ ${c.experience} yr${c.experience !== 1 ? 's' : ''}</span></td>
+      <td>
+        ${c.ats.matched_skills.map(s=>`<span class="tag matched">${s}</span>`).join('') || '<span style="color:var(--muted)">—</span>'}
+        <div style="font-size:0.73rem;color:var(--muted);margin-top:4px">${c.ats.match_percent}% match</div>
+      </td>
+      <td>
+        <div class="score-wrap">
+          <div class="score-num" style="color:${scoreColor(c.ats.total)}">${c.ats.total}<span style="font-size:0.75rem;font-weight:400;color:var(--muted)">/100</span></div>
+          <div class="score-bar"><div class="score-fill ${scoreClass(c.ats.total)}" data-w="${c.ats.total}"></div></div>
+        </div>
+      </td>
+      <td>${c.ats.missing_skills.map(s=>`<span class="tag missing">${s}</span>`).join('') || '<span style="color:var(--green);font-size:0.82rem">✅ None</span>'}</td>
     </tr>
-  `).join("");
+  `).join('');
 
-  // Chart 1: ATS Scores
-  Plotly.newPlot("chartScores", [{
-    type: "bar",
+  /* Animate score bars */
+  setTimeout(() => {
+    document.querySelectorAll('.score-fill[data-w]').forEach(el => {
+      el.style.width = el.dataset.w + '%';
+    });
+  }, 300);
+
+  /* Chart 1 — ATS Scores */
+  Plotly.newPlot('chartScores', [{
+    type: 'bar',
     x: candidates.map(c => c.name),
     y: candidates.map(c => c.ats.total),
-    marker: { color: candidates.map(c => c.ats.total >= 80 ? "#34a853" : c.ats.total >= 60 ? "#fbbc04" : "#ea4335") },
-    text: candidates.map(c => c.ats.total),
-    textposition: "outside"
+    marker: {
+      color: candidates.map(c => scoreColor(c.ats.total)),
+      opacity: 0.85,
+      line: { color: 'rgba(255,255,255,0.1)', width: 1 }
+    },
+    text: candidates.map(c => c.ats.total + '/100'),
+    textposition: 'outside',
+    textfont: { color: '#e8eaf6', size: 11 }
   }], {
-    title: "ATS Score Distribution",
-    yaxis: { range: [0, 105] },
-    margin: { t: 40, b: 60 }
-  }, { responsive: true });
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: { color: '#8892b0', family: 'Inter' },
+    title: { text: 'ATS Score Distribution', font: { color: '#e8eaf6', size: 14 } },
+    xaxis: { gridcolor: 'rgba(255,255,255,0.05)', tickfont: { color: '#8892b0' } },
+    yaxis: { range: [0, 110], gridcolor: 'rgba(255,255,255,0.05)', tickfont: { color: '#8892b0' } },
+    margin: { t: 50, b: 60, l: 40, r: 20 }
+  }, { responsive: true, displayModeBar: false });
 
-  // Chart 2: Skill Frequency
-  const sfEntries = Object.entries(skillFreq).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  Plotly.newPlot("chartSkills", [{
-    type: "bar", orientation: "h",
-    x: sfEntries.map(e=>e[1]),
-    y: sfEntries.map(e=>e[0]),
-    marker: { color: "#1a73e8" }
+  /* Chart 2 — Skill Frequency */
+  const sfEntries = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  Plotly.newPlot('chartSkills', [{
+    type: 'bar', orientation: 'h',
+    x: sfEntries.map(e => e[1]),
+    y: sfEntries.map(e => e[0]),
+    marker: {
+      color: sfEntries.map((_,i) => `hsl(${240 + i*15},70%,65%)`),
+      opacity: 0.85
+    },
+    text: sfEntries.map(e => e[1]),
+    textposition: 'outside',
+    textfont: { color: '#e8eaf6', size: 11 }
   }], {
-    title: "Top Skills Across Candidates",
-    margin: { t: 40, l: 120 }
-  }, { responsive: true });
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: { color: '#8892b0', family: 'Inter' },
+    title: { text: 'Top Skills Across Candidates', font: { color: '#e8eaf6', size: 14 } },
+    xaxis: { gridcolor: 'rgba(255,255,255,0.05)', tickfont: { color: '#8892b0' } },
+    yaxis: { tickfont: { color: '#8892b0' } },
+    margin: { t: 50, b: 40, l: 130, r: 40 }
+  }, { responsive: true, displayModeBar: false });
+
+  /* Scroll to dashboard */
+  document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 </body>
